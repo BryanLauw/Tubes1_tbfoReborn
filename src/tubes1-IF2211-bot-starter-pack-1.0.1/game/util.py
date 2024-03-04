@@ -23,3 +23,6 @@ def position_equals(a: Position, b: Position):
 
 def count_steps(a: Position, b: Position):
     return abs(a.x - b.x) + abs(a.y - b.y)
+
+def position_equals_alt(x1, y1, x2, y2):
+    return (x1 == x2) and (y1 == y2)

@@ -11,18 +11,5 @@ def get_direction(current_x, current_y, dest_x, dest_y):
         delta_y = 0
     return (delta_x, delta_y)
 
-def get_direction_alt(current_x, current_y, dest_x, dest_y):
-    delta_x = clamp(dest_x - current_x, -1, 1)
-    delta_y = clamp(dest_y - current_y, -1, 1)
-    if delta_y != 0:
-        delta_x = 0
-    return (delta_x, delta_y)
-
 def position_equals(a: Position, b: Position):
     return a.x == b.x and a.y == b.y
-
-def count_steps(a: Position, b: Position):
-    return abs(a.x - b.x) + abs(a.y - b.y)
-
-def position_equals_alt(x1, y1, x2, y2):
-    return (x1 == x2) and (y1 == y2)

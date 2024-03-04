@@ -1,6 +1,5 @@
 from .models import Position
 
-
 def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
 

@@ -45,15 +45,14 @@ class Player:
     inventory_size: int
     diamonds_being_held: int
     entering_portal: bool
-    is_avoiding_portal: bool
     
     def __init__(self, current_position: Position, base_position: Position, inventory_size: int, diamonds_being_held: int):
         self.current_position = current_position
         self.base_position = base_position
         self.inventory_size = inventory_size
         self.diamonds_being_held = diamonds_being_held
-        self.is_avoiding_portal = False
         self.entering_portal = False
+        self.current_target = None
     
     def is_inventory_full(self) -> bool:
         return self.diamonds_being_held == self.inventory_size
@@ -69,19 +68,16 @@ class Player:
         delta_x, delta_y = get_direction(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
         next_x, next_y = self.current_position.x + delta_x, self.current_position.y + delta_y
         
-        if self.is_avoiding_portal:
-            delta_x, delta_y = get_direction_alt(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
-            self.is_avoiding_portal = False
-        
         if (coordinate_equals(next_x, next_y, portals.closest_portal.position.x, portals.closest_portal.position.y) or
             coordinate_equals(next_x, next_y, portals.farthest_portal.position.x, portals.farthest_portal.position.y)):
-            if self.current_target.type != "TeleportGameObject":
-                delta_x_alt, delta_y_alt = get_direction_alt(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
-                if delta_x == delta_x_alt and delta_y == delta_y_alt:
-                    delta_x, delta_y = delta_y, delta_x
-                    self.is_avoiding_portal = True                    
+            if self.current_target and self.current_target.type != "TeleportGameObject":
+                delta_x, delta_y = get_direction_alt(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
             else:
                 self.entering_portal = True
+        
+        elif coordinate_equals(next_x, next_y, red_button.position.x, red_button.position.y):
+            if self.current_target and self.current_target.type != "DiamondButtonGameObject":
+                delta_x, delta_y = get_direction_alt(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
         
         self.next_move = (delta_x, delta_y)
         
@@ -134,7 +130,6 @@ class GameState:
     def __init__(self, board_bot: GameObject, board: Board):
         self.board = board
         self.player_bot = board_bot
-        
     
     def initialize(self):
         list_of_diamonds = []
@@ -163,7 +158,6 @@ class MyBot(BaseLogic):
     def __init__(self):
         self.back_to_base: bool = False
         self.inside_portal: bool = False
-        self.is_avoiding_portal: bool = False
     
     def next_move(self, board_bot: GameObject, board: Board) -> Tuple[int, int]:
         game_state = GameState(board_bot, board)
@@ -186,11 +180,8 @@ class MyBot(BaseLogic):
             diamonds.check_red_button(player, portals, self.inside_portal)
         
         player.avoid_obstacles(portals, diamonds.red_button)
-        self.is_avoiding_portal = player.is_avoiding_portal
-        
         if player.entering_portal:
             self.inside_portal = True
 
         return player.next_move
-
 

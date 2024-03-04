@@ -102,12 +102,13 @@ class Diamonds:
                 self.chosen_diamond_distance = diamond_distance    
         
         if not inside_portal and count_steps(player.current_position, portals.closest_portal.position) < self.chosen_diamond_distance:
-            diamond_distance = portals.count_steps_by_portal(player.current_position, diamond.position)
-            diff = diamond.properties.points - self.chosen_diamond.properties.points
-            if self.chosen_diamond_distance > diamond_distance - (diff * 2):
-                self.chosen_diamond = diamond
-                self.chosen_diamond_distance = diamond_distance
-                player.set_target(portals.closest_portal)
+            for diamond in self.diamonds_list:
+                diamond_distance = portals.count_steps_by_portal(player.current_position, diamond.position)
+                diff = diamond.properties.points - self.chosen_diamond.properties.points
+                if self.chosen_diamond_distance > diamond_distance - (diff * 2):
+                    self.chosen_diamond = diamond
+                    self.chosen_diamond_distance = diamond_distance
+                    player.set_target(portals.closest_portal)
                 
         player.set_target(self.chosen_diamond)
     
@@ -118,10 +119,10 @@ class Diamonds:
             red_button_distance = count_steps(player.current_position, self.red_button.position)
         
         if red_button_distance + 5 <= self.chosen_diamond_distance:
-            player.set_target(self.red_button)
-        
-        if portals.is_closer_by_portal(player.current_position, self.red_button.position):
-            player.set_target(portals.closest_portal)
+            if portals.is_closer_by_portal(player.current_position, self.red_button.position):
+                player.set_target(portals.closest_portal)
+            else:
+                player.set_target(self.red_button)
     
 class GameState:
     board: Board

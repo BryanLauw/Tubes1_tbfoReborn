@@ -110,11 +110,13 @@ class Diamonds:
         max_step_diff = 2
         for diamond in self.diamonds_list:
             diamond_distance = count_steps(player.current_position, diamond.position)
+            if (player.diamonds_being_held == 4):
+                diamond_distance += count_steps(diamond.position, player.base_position)
             point_diff = diamond.properties.points - self.chosen_diamond.properties.points
             if self.chosen_diamond_distance > diamond_distance - (point_diff * max_step_diff):
                 self.chosen_diamond = diamond
                 self.chosen_diamond_distance = diamond_distance
-                self.chosen_target = diamond    
+                self.chosen_target = diamond
         
         if not player.is_inside_portal and count_steps(player.current_position, portals.closest_portal.position) < self.chosen_diamond_distance:
             for diamond in self.diamonds_list:
@@ -191,13 +193,17 @@ class MyBot(BaseLogic):
             player.set_target_position(player.base_position)
             self.back_to_base = True
             
-            if not player.is_inside_portal and portals.is_closer_by_portal(player.current_position, player.base_position):
+            if not player.is_inside_portal and (not game_state.no_time_left(player.current_position, player.base_position)) and portals.is_closer_by_portal(player.current_position, player.base_position):
                 player.set_target(portals.closest_portal)
 
         else:            
             diamonds.choose_diamond(player, portals)
-            diamonds.check_red_button(player, portals)
-            player.set_target(diamonds.chosen_target)
+            if diamonds.chosen_target:
+                diamonds.check_red_button(player, portals)
+                player.set_target(diamonds.chosen_target)
+            else:
+                player.set_target_position(player.base_position)
+                self.back_to_base = True
         
         player.avoid_obstacles(portals, self.is_avoiding_portal)
         self.is_avoiding_portal = player.is_avoiding_portal

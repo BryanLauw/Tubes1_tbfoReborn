@@ -111,7 +111,10 @@ class Diamonds:
         for diamond in self.diamonds_list:
             diamond_distance = count_steps(player.current_position, diamond.position)
             if (player.diamonds_being_held == 4):
-                diamond_distance += count_steps(diamond.position, player.base_position)
+                diamond_to_base = count_steps(diamond.position, player.base_position)
+                diamond_to_portal1 = count_steps(diamond.position, portals.closest_portal.position) + count_steps(portals.farthest_portal.position, player.base_position)
+                diamond_to_portal2 = count_steps(diamond.position, portals.farthest_portal.position) + count_steps(portals.closest_portal.position, player.base_position)
+                diamond_distance += min(diamond_to_base, diamond_to_portal1, diamond_to_portal2)
             point_diff = diamond.properties.points - self.chosen_diamond.properties.points
             if self.chosen_diamond_distance > diamond_distance - (point_diff * max_step_diff):
                 self.chosen_diamond = diamond
@@ -122,7 +125,10 @@ class Diamonds:
             for diamond in self.diamonds_list:
                 diamond_distance = portals.count_steps_by_portal(player.current_position, diamond.position)
                 if (player.diamonds_being_held == 4):
-                    diamond_distance += count_steps(diamond.position, player.base_position)
+                    diamond_to_base = count_steps(diamond.position, player.base_position)
+                    diamond_to_portal1 = count_steps(diamond.position, portals.closest_portal.position) + count_steps(portals.farthest_portal.position, player.base_position)
+                    diamond_to_portal2 = count_steps(diamond.position, portals.farthest_portal.position) + count_steps(portals.closest_portal.position, player.base_position)
+                    diamond_distance += min(diamond_to_base, diamond_to_portal1, diamond_to_portal2)
                 point_diff = diamond.properties.points - self.chosen_diamond.properties.points
                 if self.chosen_diamond_distance > diamond_distance - (point_diff * max_step_diff):
                     self.chosen_diamond = diamond
@@ -135,8 +141,14 @@ class Diamonds:
         else:
             red_button_distance = count_steps(player.current_position, self.red_button.position)
         
+        if (player.diamonds_being_held == 4):
+            red_button_to_base = count_steps(self.red_button.position, player.base_position)
+            red_button_to_portal1 = count_steps(self.red_button.position, portals.closest_portal.position) + count_steps(portals.farthest_portal.position, player.base_position)
+            red_button_to_portal2 = count_steps(self.red_button.position, portals.farthest_portal.position) + count_steps(portals.closest_portal.position, player.base_position)
+            red_button_distance += min(red_button_to_base, red_button_to_portal1, red_button_to_portal2)
+
         max_step_diff = 4
-        if (red_button_distance + max_step_diff + ((player.diamonds_being_held // 4) * count_steps(self.red_button.position, player.base_position))) <= self.chosen_diamond_distance:
+        if (red_button_distance + max_step_diff) <= self.chosen_diamond_distance:
             if portals.is_closer_by_portal(player.current_position, self.red_button.position):
                 self.chosen_target = portals.closest_portal
             else:

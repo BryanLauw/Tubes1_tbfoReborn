@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 from game.logic.base import BaseLogic
-from game.models import GameObject, Board, Position
+from game.models import GameObject, Board, Position, Properties
 from ..util import *
 
 ## ********** Helper Function ********** ##
@@ -46,12 +46,14 @@ class Player:
     diamonds_being_held: int
     is_inside_portal: bool
     is_avoiding_portal: bool
+    milliseconds_left = int
     
-    def __init__(self, current_position: Position, base_position: Position, inventory_size: int, diamonds_being_held: int):
+    def __init__(self, current_position: Position, props: Properties):
         self.current_position = current_position
-        self.base_position = base_position
-        self.inventory_size = inventory_size
-        self.diamonds_being_held = diamonds_being_held
+        self.base_position = props.base
+        self.inventory_size = props.inventory_size
+        self.diamonds_being_held = props.diamonds
+        self.milliseconds_left = props.milliseconds_left
         self.is_inside_portal = False
         self.is_avoiding_portal = False
         self.current_target = None
@@ -65,8 +67,12 @@ class Player:
 
     def set_target_position(self, target_position: Position):
         self.target_position = target_position
+    
+    def is_invalid_move(self, delta_x: int, delta_y: int, board: Board):
+        return (self.current_position.x + delta_x < 0 or self.current_position.x + delta_x == board.width or
+                self.current_position.y + delta_y < 0 or self.current_position.y + delta_y == board.height)
         
-    def avoid_obstacles(self, portals: Portals, is_avoiding_portal: bool):
+    def avoid_obstacles(self, portals: Portals, is_avoiding_portal: bool, board: Board):
         delta_x, delta_y = get_direction(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
         next_x, next_y = self.current_position.x + delta_x, self.current_position.y + delta_y
         
@@ -77,6 +83,8 @@ class Player:
             delta_x_alt, delta_y_alt = get_direction_alt(self.current_position.x, self.current_position.y, self.target_position.x, self.target_position.y)
             if delta_x == delta_x_alt and delta_y == delta_y_alt:
                 delta_x, delta_y = delta_y, delta_x
+                if self.is_invalid_move(delta_x, delta_y, board):
+                    delta_x, delta_y = -delta_x, -delta_y
                 if delta_y == 0:
                     self.is_avoiding_portal = True
             else:
@@ -86,11 +94,16 @@ class Player:
         
 class Enemies:
     enemies_list: List[GameObject]
+    target_enemy: GameObject
+    target_enemy_distance: int
+    enemy_target_position: Position
     
-    def __init__(self, list_of_enemy_bots: List[GameObject], current_position: Position):
-        self.enemies_list = [bot for bot in list_of_enemy_bots if not position_equals(current_position, bot.position)]
+    def __init__(self, bots_list: List[GameObject], current_position: Position):
+        self.enemies_list = [bot for bot in bots_list if not position_equals(current_position, bot.position)]
+        self.target_enemy_distance = float('inf')
         
     # def evade_from_enemy(self, current_position: Position, enemy_position: Position):
+    
         
 
 class Diamonds:
@@ -105,16 +118,18 @@ class Diamonds:
         self.chosen_diamond = diamonds_list[0]
         self.chosen_diamond_distance = float('inf')
         self.red_button = red_button
+        self.chosen_target = None
     
     def choose_diamond(self, player: Player, portals: Portals):
         max_step_diff = 2
         for diamond in self.diamonds_list:
             diamond_distance = count_steps(player.current_position, diamond.position)
-            if (player.diamonds_being_held == 4):
+            if player.diamonds_being_held == 4:
                 diamond_to_base = count_steps(diamond.position, player.base_position)
                 diamond_to_portal1 = count_steps(diamond.position, portals.closest_portal.position) + count_steps(portals.farthest_portal.position, player.base_position)
                 diamond_to_portal2 = count_steps(diamond.position, portals.farthest_portal.position) + count_steps(portals.closest_portal.position, player.base_position)
                 diamond_distance += min(diamond_to_base, diamond_to_portal1, diamond_to_portal2)
+            
             point_diff = diamond.properties.points - self.chosen_diamond.properties.points
             if self.chosen_diamond_distance > diamond_distance - (point_diff * max_step_diff):
                 self.chosen_diamond = diamond
@@ -124,11 +139,12 @@ class Diamonds:
         if not player.is_inside_portal and count_steps(player.current_position, portals.closest_portal.position) < self.chosen_diamond_distance:
             for diamond in self.diamonds_list:
                 diamond_distance = portals.count_steps_by_portal(player.current_position, diamond.position)
-                if (player.diamonds_being_held == 4):
+                if player.diamonds_being_held == 4:
                     diamond_to_base = count_steps(diamond.position, player.base_position)
                     diamond_to_portal1 = count_steps(diamond.position, portals.closest_portal.position) + count_steps(portals.farthest_portal.position, player.base_position)
                     diamond_to_portal2 = count_steps(diamond.position, portals.farthest_portal.position) + count_steps(portals.closest_portal.position, player.base_position)
                     diamond_distance += min(diamond_to_base, diamond_to_portal1, diamond_to_portal2)
+                
                 point_diff = diamond.properties.points - self.chosen_diamond.properties.points
                 if self.chosen_diamond_distance > diamond_distance - (point_diff * max_step_diff):
                     self.chosen_diamond = diamond
@@ -178,14 +194,14 @@ class GameState:
             else:
                 list_of_bots.append(object)
         
-        return (Player(self.player_bot.position, self.player_bot.properties.base, self.player_bot.properties.inventory_size, self.player_bot.properties.diamonds),
+        return (Player(self.player_bot.position, self.player_bot.properties),
                 Diamonds(list_of_diamonds, red_button, self.player_bot.properties.diamonds),
                 Portals(list_of_portals, self.player_bot.position),
                 Enemies(list_of_bots, self.player_bot.position))
     
     def no_time_left(self, current_position: Position, base_position: Position) -> bool:
         return (not position_equals(current_position, base_position) and
-                self.player_bot.properties.milliseconds_left / count_steps(current_position, base_position) <= 1250)
+                self.player_bot.properties.milliseconds_left / count_steps(current_position, base_position) <= 1300)
 
 
 ## ********** Main Logic ********** ##
@@ -207,7 +223,8 @@ class MyBot(BaseLogic):
             player.set_target_position(player.base_position)
             self.back_to_base = True
             
-            if not player.is_inside_portal and (not game_state.no_time_left(player.current_position, player.base_position)) and portals.is_closer_by_portal(player.current_position, player.base_position):
+            if (not player.is_inside_portal and not game_state.no_time_left(player.current_position, player.base_position)
+                and portals.is_closer_by_portal(player.current_position, player.base_position)):
                 player.set_target(portals.closest_portal)
 
         else:            
@@ -219,7 +236,7 @@ class MyBot(BaseLogic):
                 player.set_target_position(player.base_position)
                 self.back_to_base = True
         
-        player.avoid_obstacles(portals, self.is_avoiding_portal)
+        player.avoid_obstacles(portals, self.is_avoiding_portal, board)
         self.is_avoiding_portal = player.is_avoiding_portal
 
         return player.next_move

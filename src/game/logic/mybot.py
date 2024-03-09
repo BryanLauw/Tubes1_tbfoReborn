@@ -192,8 +192,6 @@ class Enemies:
                 self.target_enemy = enemy
                 self.target_enemy_distance = enemy_distance
         
-        print(self.target_enemy_distance)
-        
         if (self.target_enemy_distance == 2 and not has_tried_tackle and
            (player.current_position.x != self.target_enemy.position.x and player.current_position.y != self.target_enemy.position.y)):
             player.next_move = get_direction_alt(player.current_position.x, player.current_position.y,
@@ -281,7 +279,6 @@ class MyBot(BaseLogic):
             enemies.check_nearby_enemy(diamonds, player, portals, self.tackle)
             self.tackle = enemies.try_tackle
         
-        print(player.next_move)
         if not enemies.try_tackle:
             player.avoid_obstacles(portals, self.is_avoiding_portal, board)
             self.is_avoiding_portal = player.is_avoiding_portal

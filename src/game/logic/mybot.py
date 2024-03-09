@@ -262,16 +262,7 @@ class MyBot(BaseLogic):
         if self.back_to_base or player.is_inventory_full() or game_state.no_time_left(player.current_position, player.base_position):
             player.set_target_position(player.base_position)
             self.back_to_base = True
-            
-            # if game_state.no_time_left(player.current_position, player.base_position):
-                # diamonds.choose_diamond(player, portals)
-                # if diamonds.chosen_diamond:
-                #     diamonds_distance = count_steps(player.current_position, diamonds.chosen_diamond.position) + count_steps(diamonds.chosen_diamond.position, player.base_position)
-                # else:
-                #     diamonds_distance = float('inf')
-                # if diamonds.chosen_target and diamonds_distance == count_steps(player.current_position, player.base_position):
-                #     player.set_target(diamonds.chosen_diamond)
-                
+
             if (not player.is_inside_portal and
                 (not game_state.no_time_left(player.current_position, player.base_position) or count_steps(player.current_position, portals.closest_portal.position) == 1)
                 and portals.is_closer_by_portal(player.current_position, player.base_position)):
@@ -290,6 +281,7 @@ class MyBot(BaseLogic):
             enemies.check_nearby_enemy(diamonds, player, portals, self.tackle)
             self.tackle = enemies.try_tackle
         
+        print(player.next_move)
         if not enemies.try_tackle:
             player.avoid_obstacles(portals, self.is_avoiding_portal, board)
             self.is_avoiding_portal = player.is_avoiding_portal

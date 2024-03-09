@@ -5,7 +5,7 @@
 ## Table of Contents
 
 - [General Information](#general-information)
-- [File Structures](#file_structure)
+- [File Structures](#file-structures)
 - [Requirement](#requirement)
 - [Setup and Usage](#setup-and-usage)
 - [Authors](#authors)
@@ -26,7 +26,7 @@ Algoritma greedy yang digunakan sebagai berikut:
 8. Bot akan mencari diamond lain apabila terdapat musuh berjarak 3 langkah yang searah dengan diamond terdekat
 9. Bot akan menghindari portal jika portal justru menjauhkan bot dengan tujuannya
 
-## File Structure
+## File Structures
 ```
 *
 ├── README.md
@@ -65,6 +65,7 @@ Algoritma greedy yang digunakan sebagai berikut:
     ├── run-bots.bat
     └── run-bots.sh
 ```
+
 ## Requirement
 
 - `Python` 3.X
@@ -72,7 +73,6 @@ Algoritma greedy yang digunakan sebagai berikut:
 - Docker dekstop install pada pranala [berikut](https://www.docker.com/products/docker-desktop/)
 - Instalasi library python pada `src/requirement.txt`
 - Yarn, install dengan perintah berikut
-
 ```
 npm install --global yarn
 ```
@@ -87,29 +87,18 @@ npm install --global yarn
 6. Untuk menjalankan satu bot, jalankan perintah
 
 ```
-
 python main.py --logic MyBot --email=your_email@example.com --name=your_name --password=your_password --team etimo
-
 ```
 
 Untuk menjalankan beberapa bot sekaligus jalankan perintah berikut
-
 - Untuk Windows
-
 ```
-
 ./run-bots.bat
-
 ```
-
 - Untuk Linux
-
 ```
-
 ./run-bots.sh
-
 ```
-
 7. Bot sudah dapat berjalan
 
 ## Authors
